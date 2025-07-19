@@ -1,0 +1,20 @@
+service: serverless-api-app
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+plugins:
+  - serverless-offline
+
+functions:
+  hello:
+    handler: src/handlers/handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+
+package:
+  individually: true
