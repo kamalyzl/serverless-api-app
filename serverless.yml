@@ -5,16 +5,28 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
+
 plugins:
   - serverless-offline
 
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ['aws-sdk']
+    target: 'node20'
+    platform: 'node'
+
 functions:
-  hello:
-    handler: src/handlers/handler.hello
+  merged:
+    handler: src/presentation/lambdas/mergedHandler.main
+    timeout: 15
     events:
       - http:
-          path: hello
+          path: fusionados
           method: get
+          cors: true
 
 package:
   individually: true
