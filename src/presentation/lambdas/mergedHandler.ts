@@ -1,5 +1,6 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { PlanetWeatherAggregator } from "../../application/useCases/planetWeatherAggregator";
+import { PlanetWeatherAggregator } from "../../application/useCases/PlanetWeatherAggregator";
+import 'dotenv/config';
 
 const planetWeatherAggregator = new PlanetWeatherAggregator();
 
