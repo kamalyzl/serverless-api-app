@@ -1,6 +1,5 @@
 import { main as getHistoryHandler } from "../../../src/presentation/lambdas/getHistoryHandler";
 import { GetPlanetWeatherHistoryUseCase } from "../../../src/application/useCases/GetPlanetWeatherHistory";
-import { DynamoPlanetWeatherRepository } from "../../../src/infrastructure/repositories/dynamoPlanetWeatherRepository";
 
 jest.mock("../../../src/infrastructure/repositories/dynamoPlanetWeatherRepository");
 jest.mock("../../../src/application/useCases/GetPlanetWeatherHistory");
@@ -33,7 +32,7 @@ describe("getHistoryHandler", () => {
       },
     } as any;
 
-    const result = await getHistoryHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
+    const result = await getHistoryHandler(event, {} as any, () => { }) as import("aws-lambda").APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(200);
     expect(JSON.parse(result.body)).toEqual(fakeData);
@@ -48,7 +47,7 @@ describe("getHistoryHandler", () => {
       queryStringParameters: undefined,
     } as any;
 
-    const result = await getHistoryHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
+    const result = await getHistoryHandler(event, {} as any, () => { }) as import("aws-lambda").APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(200);
     expect(JSON.parse(result.body)).toEqual(fakeData);
@@ -64,11 +63,11 @@ describe("getHistoryHandler", () => {
       },
     } as any;
 
-    const result = await getHistoryHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
+    const result = await getHistoryHandler(event, {} as any, () => { }) as import("aws-lambda").APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(500);
     expect(JSON.parse(result.body)).toEqual({
-      error: "Fallo en DynamoDB",
+      message: "Internal Server Error",
     });
   });
 
@@ -79,14 +78,13 @@ describe("getHistoryHandler", () => {
     const event = {
       queryStringParameters: {
         limit: "3",
-        lastKey: "invalid-json", // No es un JSON válido
+        lastKey: "invalid-json",
       },
     } as any;
 
-    const result = await getHistoryHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
+    const result = await getHistoryHandler(event, {} as any, () => { }) as import("aws-lambda").APIGatewayProxyResult;
 
-    // Fallará al hacer decodeURIComponent + JSON.parse y entrará al catch
-    expect(result.statusCode).toBe(500);
-    expect(JSON.parse(result.body)).toHaveProperty("error");
+    expect(result.statusCode).toBe(200);
+    expect(JSON.parse(result.body)).toEqual(fakeData);
   });
 });

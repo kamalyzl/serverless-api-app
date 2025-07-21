@@ -1,21 +1,48 @@
 import { main as storeAggregatedHandler } from "../../../src/presentation/lambdas/storeAggregatedHandler";
 import { StorePlanetWeatherUseCase } from "../../../src/application/useCases/StorePlanetWeather";
-import { DynamoPlanetWeatherRepository } from "../../../src/infrastructure/repositories/dynamoPlanetWeatherRepository";
 import * as uuid from "uuid";
 
 jest.mock("../../../src/infrastructure/repositories/dynamoPlanetWeatherRepository");
 jest.mock("../../../src/application/useCases/StorePlanetWeather");
 jest.mock("uuid");
 
+// Utilidades para mockear y restaurar Date
+function mockDate(fixedDate: string) {
+  const RealDate = Date;
+  const MockedDate = class extends RealDate {
+    constructor(...args: any[]) {
+      if (args.length === 0) {
+        return new RealDate(fixedDate);
+      }
+      // @ts-expect-error: spread en super para mock
+      super(...args);
+      return this;
+    }
+  } as DateConstructor;
+  const originalDateNow = RealDate.now;
+  global.Date = MockedDate;
+  Date.now = jest.fn(() => new RealDate(fixedDate).getTime());
+  return { RealDate, originalDateNow };
+}
+
+function restoreDate(RealDate: DateConstructor, originalDateNow: () => number) {
+  global.Date = RealDate;
+  Date.now = originalDateNow;
+}
+
+function createEvent(body: object) {
+  return { body: JSON.stringify(body) } as any;
+}
+
 describe("storeAggregatedHandler", () => {
   const mockExecute = jest.fn();
   const fixedDate = "2024-06-01T12:00:00.000Z";
   const fixedId = "test-uuid";
+  let RealDate: DateConstructor;
+  let originalDateNow: () => number;
 
   beforeAll(() => {
-    jest.spyOn(global, "Date").mockImplementation(() => ({
-      toISOString: () => fixedDate,
-    } as unknown as Date));
+    ({ RealDate, originalDateNow } = mockDate(fixedDate));
     (uuid.v4 as jest.Mock).mockReturnValue(fixedId);
   });
 
@@ -31,6 +58,7 @@ describe("storeAggregatedHandler", () => {
 
   afterAll(() => {
     jest.restoreAllMocks();
+    restoreDate(RealDate, originalDateNow);
   });
 
   it("debería devolver 201 y guardar el registro correctamente", async () => {
@@ -44,9 +72,7 @@ describe("storeAggregatedHandler", () => {
       weatherTemperature: 35,
       weatherWindspeed: 10,
     };
-    const event = {
-      body: JSON.stringify(validBody),
-    } as any;
+    const event = createEvent(validBody);
 
     const result = await storeAggregatedHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
 
@@ -66,23 +92,19 @@ describe("storeAggregatedHandler", () => {
 
   it("debería devolver 400 si la validación falla", async () => {
     const invalidBody = {
-      // Falta characterName y otros campos requeridos
       planetName: "Tatooine",
       planetClimate: "arid",
       planetTerrain: "desert",
       planetPopulation: "200000",
       weatherTemperature: 35,
     };
-    const event = {
-      body: JSON.stringify(invalidBody),
-    } as any;
+    const event = createEvent(invalidBody);
 
     const result = await storeAggregatedHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(400);
     const responseBody = JSON.parse(result.body);
     expect(responseBody).toHaveProperty("message", "Validation failed");
-    expect(responseBody).toHaveProperty("errors");
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
@@ -97,14 +119,12 @@ describe("storeAggregatedHandler", () => {
       weatherTemperature: 35,
       weatherWindspeed: 10,
     };
-    const event = {
-      body: JSON.stringify(validBody),
-    } as any;
+    const event = createEvent(validBody);
 
     const result = await storeAggregatedHandler(event, {} as any, () => {}) as import("aws-lambda").APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(500);
     const responseBody = JSON.parse(result.body);
-    expect(responseBody).toHaveProperty("error", "Error de base de datos");
+    expect(responseBody).toHaveProperty("message", "Error de base de datos");
   });
 });

@@ -18,7 +18,7 @@ describe("mergedHandler", () => {
 
     expect(result.statusCode).toBe(400);
     expect(JSON.parse(result.body)).toEqual({
-      message: "Missing characterId in query parameters",
+      message: "El parámetro characterId es requerido y debe ser un número positivo",
     });
   });
 

@@ -36,6 +36,55 @@ provider:
 
 plugins:
   - serverless-offline
+  - serverless-openapi-documentation
+
+custom:
+  documentation:
+    version: '1.0.0'
+    title: 'API de Clima Planetario'
+    description: 'API para consultar y almacenar información del clima de planetas usando Serverless y AWS.'
+    models:
+      - name: PlanetWeatherHistoryResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            planet:
+              type: string
+            weatherHistory:
+              type: array
+              items:
+                type: object
+                properties:
+                  date:
+                    type: string
+                  temperature:
+                    type: number
+                  description:
+                    type: string
+      - name: StoreAggregatedResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+      - name: MergedResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            mergedData:
+              type: array
+              items:
+                type: object
+                properties:
+                  planet:
+                    type: string
+                  temperature:
+                    type: number
+                  description:
+                    type: string
 
 build:
   esbuild:
@@ -57,6 +106,15 @@ functions:
           path: fusionados
           method: get
           cors: true
+          documentation:
+            summary: "Obtener datos fusionados de clima planetario"
+            description: "Devuelve datos fusionados de clima de varios planetas."
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Respuesta con datos fusionados."
+                responseModels:
+                  "application/json": "MergedResponse"
   store:
     handler: src/presentation/lambdas/storeAggregatedHandler.main
     memorySize: 256
@@ -67,6 +125,15 @@ functions:
           path: almacenar
           method: post
           cors: true
+          documentation:
+            summary: "Almacenar datos agregados de clima"
+            description: "Almacena datos agregados de clima de un planeta."
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Confirmación de almacenamiento."
+                responseModels:
+                  "application/json": "StoreAggregatedResponse"
   history:
     handler: src/presentation/lambdas/getHistoryHandler.main
     memorySize: 256
@@ -77,6 +144,20 @@ functions:
           path: historial
           method: get
           cors: true
+          documentation:
+            summary: "Obtener historial de clima de un planeta"
+            description: "Devuelve el historial de clima para un planeta específico."
+            queryParams:
+              - name: limit
+                description: "Cantidad máxima de registros a devolver."
+                required: false
+                type: integer
+            methodResponses:
+              - statusCode: 200
+                responseBody:
+                  description: "Historial de clima del planeta."
+                responseModels:
+                  "application/json": "PlanetWeatherHistoryResponse"
 
 package:
   individually: true

@@ -1,0 +1,82 @@
+openapi: 3.0.0
+components:
+  schemas:
+    PlanetWeatherHistoryResponse:
+      type: object
+      properties:
+        planet:
+          type: string
+        weatherHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              temperature:
+                type: number
+              description:
+                type: string
+    StoreAggregatedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    MergedResponse:
+      type: object
+      properties:
+        mergedData:
+          type: array
+          items:
+            type: object
+            properties:
+              planet:
+                type: string
+              temperature:
+                type: number
+              description:
+                type: string
+  securitySchemes: {}
+info:
+  title: API de Clima Planetario
+  description: >-
+    API para consultar y almacenar información del clima de planetas usando
+    Serverless y AWS.
+  version: 1.0.0
+paths:
+  /fusionados:
+    get:
+      operationId: merged
+      summary: Obtener datos fusionados de clima planetario
+      description: Devuelve datos fusionados de clima de varios planetas.
+      responses:
+        '200':
+          description: Respuesta con datos fusionados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergedResponse'
+  /almacenar:
+    post:
+      operationId: store
+      summary: Almacenar datos agregados de clima
+      description: Almacena datos agregados de clima de un planeta.
+      responses:
+        '200':
+          description: Confirmación de almacenamiento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAggregatedResponse'
+  /historial:
+    get:
+      operationId: history
+      summary: Obtener historial de clima de un planeta
+      description: Devuelve el historial de clima para un planeta específico.
+      responses:
+        '200':
+          description: Historial de clima del planeta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanetWeatherHistoryResponse'
