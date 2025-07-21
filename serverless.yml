@@ -13,6 +13,8 @@ provider:
     NODE_ENV: ${env:NODE_ENV}
     DYNAMODB_TABLE: ${env:DYNAMODB_TABLE, ''}
     REDIS_URL: ${env:REDIS_URL, ''}
+    SWAPI_BASE_URL: ${env:SWAPI_BASE_URL, ''}
+    WEATHER_BASE_URL: ${env:WEATHER_BASE_URL, ''}
   iam:
     role:
       statements:

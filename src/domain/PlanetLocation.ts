@@ -5,5 +5,4 @@ export const planetCoordinates: Record<string, { latitude: number; longitude: nu
     Naboo: { latitude: 41.9028, longitude: 12.4964 },             // Roma
     Endor: { latitude: 47.6062, longitude: -122.3321 },           // Seattle
     Kamino: { latitude: -33.918861, longitude: 18.4233 },         // Ciudad del Cabo
-    // Puedes seguir agregando planetas aquí
   };

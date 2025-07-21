@@ -1,35 +1,22 @@
 import axios from "axios";
 import { WeatherService } from "../../domain/services/weatherService";
-import logger from "../logger/logger";
 import { cacheService } from "../cache/cacheService";
-
-interface WeatherResponse {
-  current_weather: {
-    temperature: number;
-    windspeed: number;
-    time: string;
-  };
-}
+import { WeatherResponse } from "./types/WeatherResponse";
+import { logWeatherStart, logWeatherSuccess, logWeatherError } from "../logger/weatherLogger";
 
 export class WeatherApiService implements WeatherService {
     
-    private readonly baseUrl = "https://api.open-meteo.com/v1/forecast";
+    private readonly baseUrl = process.env.WEATHER_BASE_URL!;
 
     async getWeather(latitude: number, longitude: number): Promise<{ temperature: number; windspeed: number }> {
         const requestId = `weather-${latitude}-${longitude}-${Date.now()}`;
         
-        // Intentar obtener del cache primero
         const cachedWeather = await cacheService.getWeather<{ temperature: number; windspeed: number }>(latitude, longitude);
         if (cachedWeather) {
-            logger.info('Weather obtenido del cache', {
-                requestId,
-                coordinates: { latitude, longitude },
-                service: 'weather'
-            });
             return cachedWeather;
         }
         
-        logger.info('Iniciando llamada a Weather API', {
+        logWeatherStart({
             requestId,
             coordinates: { latitude, longitude },
             url: this.baseUrl,
@@ -53,12 +40,11 @@ export class WeatherApiService implements WeatherService {
                 windspeed: res.data.current_weather.windspeed,
             };
             
-            // Guardar en cache
             await cacheService.setWeather(latitude, longitude, weatherData);
             
-            logger.info('Llamada a Weather API exitosa', {
+            logWeatherSuccess({
                 requestId,
-                responseTime: `${responseTime}ms`,
+                responseTime,
                 statusCode: res.status,
                 data: {
                     temperature: res.data.current_weather.temperature,
@@ -83,7 +69,7 @@ export class WeatherApiService implements WeatherService {
                 }
             };
             
-            logger.error('Error en llamada a Weather API', errorDetails);
+            logWeatherError(errorDetails);
             throw error;
         }
     }

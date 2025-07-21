@@ -9,39 +9,34 @@ import { IPlanetWeatherRepository } from '../../domain/repositories/IPlanetWeath
 import logger from '../logger/logger';
 import { sortByCreatedAtDesc } from '../../shared/utils/sortByCreatedAt';
 
-
 export class DynamoPlanetWeatherRepository implements IPlanetWeatherRepository {
 
   private tableName = process.env.DYNAMODB_TABLE;
 
   async save(record: PlanetWeatherRecord): Promise<void> {
-
-    logger.info({ tableName: this.tableName }, 'Nombre de la tabla DynamoDB');
-    logger.info({ record }, 'Guardando registro en DynamoDB');
     const command = new PutCommand({
       TableName: this.tableName,
       Item: record,
     });
     try {
       await dynamoDb.send(command);
-      logger.info('Registro guardado exitosamente en DynamoDB');
+      logger.info('Registro guardado exitosamente en DynamoDB', { tableName: this.tableName, recordId: record.id });
     } catch (error) {
-      logger.error({ error, record }, 'Error al guardar registro en DynamoDB');
+      logger.error('Error al guardar registro en DynamoDB', { error: error instanceof Error ? error.message : error, tableName: this.tableName, recordId: record.id });
       throw error;
     }
   }
 
   async getAll(): Promise<PlanetWeatherRecord[]> {
-    logger.info('Obteniendo todos los registros de DynamoDB');
     const command = new ScanCommand({
       TableName: this.tableName,
     });
     try {
       const response = await dynamoDb.send(command);
-      logger.info({ count: response.Items?.length }, 'Registros obtenidos exitosamente de DynamoDB');
+      logger.info('Registros obtenidos exitosamente de DynamoDB', { count: response.Items?.length });
       return response.Items as PlanetWeatherRecord[];
     } catch (error) {
-      logger.error({ error }, 'Error al obtener registros de DynamoDB');
+      logger.error('Error al obtener registros de DynamoDB', { error: error instanceof Error ? error.message : error, tableName: this.tableName });
       throw error;
     }
   }
@@ -54,7 +49,6 @@ export class DynamoPlanetWeatherRepository implements IPlanetWeatherRepository {
     lastEvaluatedKey?: Record<string, AttributeValue>;
     nextPageToken?: string
   }> {
-    logger.info('Obteniendo registros paginados y ordenados por fecha de DynamoDB');
     const command = new ScanCommand({
       TableName: this.tableName,
       Limit: limit,
@@ -78,9 +72,10 @@ export class DynamoPlanetWeatherRepository implements IPlanetWeatherRepository {
       if (nextPageToken) {
         result.nextPageToken = nextPageToken;
       }
+      logger.info('Registros paginados obtenidos exitosamente de DynamoDB', { count: items.length, hasNextPage: !!nextPageToken });
       return result;
     } catch (error) {
-      logger.error({ error }, 'Error al obtener registros paginados de DynamoDB');
+      logger.error('Error al obtener registros paginados de DynamoDB', { error: error instanceof Error ? error.message : error, tableName: this.tableName });
       throw error;
     }
   }

@@ -5,41 +5,46 @@ import { StorePlanetWeatherUseCase } from "../../application/useCases/StorePlane
 import { DynamoPlanetWeatherRepository } from "../../infrastructure/repositories/dynamoPlanetWeatherRepository";
 import { CreatePlanetWeatherDTOSchema } from '../../domain/dtos/CreatePlanetWeatherDTO';
 import { PlanetWeatherRecord } from '../../domain/models/PlanetWeatherRecord';
+import { responseOk, responseBadRequest, responseError } from '../../shared/utils/httpResponses';
+import logger from '../../infrastructure/logger/logger';
 
-export const main: APIGatewayProxyHandler = async (event) => {
+function parseAndValidateBody(event: any): PlanetWeatherRecord | null {
   try {
     const body = JSON.parse(event.body || '{}');
     const parseResult = CreatePlanetWeatherDTOSchema.safeParse(body);
-
     if (!parseResult.success) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "Validation failed",
-          errors: parseResult.error.flatten().fieldErrors,
-        }),
-      };
+      return null;
     }
-
-    const record: PlanetWeatherRecord = {
+    return {
       ...body,
       id: uuidv4(),
       createdAt: new Date().toISOString(),
     };
+  } catch {
+    return null;
+  }
+}
+
+export const main: APIGatewayProxyHandler = async (event) => {
+  try {
+    const record = parseAndValidateBody(event);
+    if (!record) {
+      return responseBadRequest("Validation failed");
+    }
 
     const repository = new DynamoPlanetWeatherRepository();
     const useCase = new StorePlanetWeatherUseCase(repository);
 
+    const start = Date.now();
     await useCase.execute(record);
+    const duration = Date.now() - start;
+    logger.info(`Function duration: ${duration}ms`);
 
     return {
-      statusCode: 201,
-      body: JSON.stringify(record),
+      ...responseOk(record),
+      statusCode: 201
     };
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: (error as Error).message }),
-    };
+    return responseError((error as Error).message);
   }
 };

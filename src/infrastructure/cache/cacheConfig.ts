@@ -4,8 +4,8 @@ export interface CacheConfig {
   }
   
   export const CACHE_CONFIGS = {
-    SWAPI_CHARACTER: { ttlSeconds: 5 * 60, prefix: 'swapi:character' },
-    SWAPI_PLANET: { ttlSeconds: 5 * 60, prefix: 'swapi:planet' },
-    WEATHER: { ttlSeconds: 30 * 60, prefix: 'weather' }, // 30 minutos
+    SWAPI_CHARACTER: { ttlSeconds: 30 * 60, prefix: 'swapi:character' }, // 30 minutos
+    SWAPI_PLANET: { ttlSeconds: 30 * 60, prefix: 'swapi:planet' },
+    WEATHER: { ttlSeconds: 30 * 60, prefix: 'weather' },
   } as const;
   

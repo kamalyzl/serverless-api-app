@@ -16,6 +16,20 @@ This template demonstrates how to make a simple HTTP API with Node.js running on
 
 This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
 
+## Variables de entorno necesarias
+
+Asegúrate de definir la variable de entorno `SWAPI_BASE_URL` (por ejemplo, en tu archivo .env o en el entorno de ejecución):
+
+```
+SWAPI_BASE_URL=https://swapi.py4e.com/api
+```
+
+Asegúrate de definir la variable de entorno `WEATHER_BASE_URL` (por ejemplo, en tu archivo .env o en el entorno de ejecución):
+
+```
+WEATHER_BASE_URL=https://api.open-meteo.com/v1/forecast
+```
+
 ## Usage
 
 ### Deployment

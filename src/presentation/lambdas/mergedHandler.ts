@@ -3,40 +3,26 @@ import { PlanetWeatherAggregator } from "../../application/useCases/PlanetWeathe
 import 'dotenv/config';
 import { logErrorIfNotTest } from '../../infrastructure/logger/logErrorIfNotTest';
 import logger from '../../infrastructure/logger/logger';
+import { responseOk, responseBadRequest, responseError } from '../../shared/utils/httpResponses';
+import { getCharacterId } from '../../shared/utils/requestUtils';
 
 const planetWeatherAggregator = new PlanetWeatherAggregator();
 
 export const main: APIGatewayProxyHandler = async (event) => {
-
-    try {
-        const characterId = Number(event.queryStringParameters?.characterId);
-
-        if (!characterId) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ message: "Missing characterId in query parameters" }),
-            };
-        }
-
-        const start = Date.now();
-
-        const result = await planetWeatherAggregator.getAggregatedPlanetWeather(characterId);
-
-        const duration = Date.now() - start;
-
-        logger.info(`Function duration: ${duration}ms`); // Para revisar si puedes bajar el timeout
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(result)
-        };
+  try {
+    const characterId = getCharacterId(event);
+    if (!characterId) {
+      return responseBadRequest("El parámetro characterId es requerido y debe ser un número positivo");
     }
-    catch (error) {
-        logErrorIfNotTest("Error al obtener datos agregados:", error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: "Internal Server Error" }),
-        };
-    }
+
+    const start = Date.now();
+    const result = await planetWeatherAggregator.getAggregatedPlanetWeather(characterId);
+    const duration = Date.now() - start;
+    logger.info(`Function duration: ${duration}ms`);
+    return responseOk(result);
+  } catch (error) {
+    logErrorIfNotTest("Error al obtener datos agregados:", error);
+    return responseError("Internal Server Error");
+  }
 };
 
