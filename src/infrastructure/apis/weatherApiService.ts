@@ -1,6 +1,7 @@
 import axios from "axios";
 import { WeatherService } from "../../domain/services/weatherService";
 import logger from "../logger/logger";
+import { cacheService } from "../cache/cacheService";
 
 interface WeatherResponse {
   current_weather: {
@@ -16,6 +17,17 @@ export class WeatherApiService implements WeatherService {
 
     async getWeather(latitude: number, longitude: number): Promise<{ temperature: number; windspeed: number }> {
         const requestId = `weather-${latitude}-${longitude}-${Date.now()}`;
+        
+        // Intentar obtener del cache primero
+        const cachedWeather = await cacheService.getWeather<{ temperature: number; windspeed: number }>(latitude, longitude);
+        if (cachedWeather) {
+            logger.info('Weather obtenido del cache', {
+                requestId,
+                coordinates: { latitude, longitude },
+                service: 'weather'
+            });
+            return cachedWeather;
+        }
         
         logger.info('Iniciando llamada a Weather API', {
             requestId,
@@ -36,6 +48,14 @@ export class WeatherApiService implements WeatherService {
             const endTime = Date.now();
             const responseTime = endTime - startTime;
             
+            const weatherData = {
+                temperature: res.data.current_weather.temperature,
+                windspeed: res.data.current_weather.windspeed,
+            };
+            
+            // Guardar en cache
+            await cacheService.setWeather(latitude, longitude, weatherData);
+            
             logger.info('Llamada a Weather API exitosa', {
                 requestId,
                 responseTime: `${responseTime}ms`,
@@ -48,10 +68,7 @@ export class WeatherApiService implements WeatherService {
                 service: 'weather'
             });
 
-            return {
-                temperature: res.data.current_weather.temperature,
-                windspeed: res.data.current_weather.windspeed,
-            };
+            return weatherData;
         } catch (error: unknown) {
             const errorDetails = {
                 requestId,

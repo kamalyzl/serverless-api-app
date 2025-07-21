@@ -1,6 +1,7 @@
 import axios from "axios";
 import { SwapiService } from "../../domain/services/swapiService";
 import logger from "../logger/logger";
+import { cacheService } from "../cache/cacheService";
 
 const BASE_URL = "https://swapi.py4e.com/api";
 
@@ -20,6 +21,17 @@ export class SwapiApiService implements SwapiService {
   async getCharacter(id: number): Promise<{ name: string; homeworld: string }> {
     const requestId = `swapi-${id}-${Date.now()}`;
     
+    // Intentar obtener del cache primero
+    const cachedCharacter = await cacheService.getSwapiCharacter<{ name: string; homeworld: string }>(id);
+    if (cachedCharacter) {
+      logger.info('Character obtenido del cache', {
+        requestId,
+        characterId: id,
+        service: 'swapi'
+      });
+      return cachedCharacter;
+    }
+    
     logger.info(`Iniciando llamada a SWAPI para ${id}`, {
       requestId,
       characterId: id,
@@ -33,6 +45,11 @@ export class SwapiApiService implements SwapiService {
       const endTime = Date.now();
       const responseTime = endTime - startTime;
       
+      const characterData = { name: res.data.name, homeworld: res.data.homeworld };
+      
+      // Guardar en cache
+      await cacheService.setSwapiCharacter(id, characterData);
+      
       logger.info('Llamada a SWAPI exitosa', {
         requestId,
         characterId: id,
@@ -45,7 +62,7 @@ export class SwapiApiService implements SwapiService {
         service: 'swapi'
       });
       
-      return { name: res.data.name, homeworld: res.data.homeworld };
+      return characterData;
     } catch (error: unknown) {
       const errorDetails = {
         requestId,
@@ -68,6 +85,17 @@ export class SwapiApiService implements SwapiService {
   async getPlanetDataFromUrl(homeworldUrl: string): Promise<{ name: string; climate: string; terrain: string; population: string }> {
     const requestId = `swapi-planet-url-${Date.now()}`;
     
+    // Intentar obtener del cache primero
+    const cachedPlanet = await cacheService.getSwapiPlanet<{ name: string; climate: string; terrain: string; population: string }>(homeworldUrl);
+    if (cachedPlanet) {
+      logger.info('Planet obtenido del cache', {
+        requestId,
+        homeworldUrl,
+        service: 'swapi'
+      });
+      return cachedPlanet;
+    }
+    
     logger.info('Iniciando llamada a SWAPI para planeta desde URL', {
       requestId,
       homeworldUrl,
@@ -84,6 +112,16 @@ export class SwapiApiService implements SwapiService {
       const endTime = Date.now();
       const responseTime = endTime - startTime;
       
+      const planetResult = {
+        name: planetData.name,
+        climate: planetData.climate,
+        terrain: planetData.terrain,
+        population: planetData.population
+      };
+      
+      // Guardar en cache
+      await cacheService.setSwapiPlanet(homeworldUrl, planetResult);
+      
       logger.info('Llamada a SWAPI para planeta desde URL exitosa', {
         requestId,
         homeworldUrl,
@@ -98,12 +136,7 @@ export class SwapiApiService implements SwapiService {
         service: 'swapi'
       });
       
-      return {
-        name: planetData.name,
-        climate: planetData.climate,
-        terrain: planetData.terrain,
-        population: planetData.population
-      };
+      return planetResult;
     } catch (error: unknown) {
       const errorDetails = {
         requestId,

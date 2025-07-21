@@ -1,27 +1,20 @@
-import { Character, Planet, PlanetWeatherRecord, Weather } from '../../domain/models/PlanetWeatherRecord';
+import { PlanetWeatherRecord } from '../../domain/models/PlanetWeatherRecord';
 import { v4 as uuidv4 } from 'uuid';
 
 export function mapToPlanetWeatherRecord(
-  character: Character,
-  planet: Planet,
-  weather: Weather
+  character: { name: string; homeworld: string },
+  planet: { name: string; climate: string; terrain: string; population: string },
+  weather: { temperature: number; windspeed: number }
 ): PlanetWeatherRecord {
   return {
     id: uuidv4(),
-    character: {
-      name: character.name,
-      homeworld: character.homeworld,
-    },
-    planet: {
-      name: planet.name,
-      climate: planet.climate,
-      terrain: planet.terrain,
-      population: planet.population,
-    },
-    weather: {
-      temperature: weather.temperature,
-      windspeed: weather.windspeed,
-    },
+    characterName: character.name,
+    planetName: planet.name,
+    planetClimate: planet.climate,
+    planetTerrain: planet.terrain,
+    planetPopulation: planet.population,
+    weatherTemperature: weather.temperature,
+    weatherWindspeed: weather.windspeed,
     createdAt: new Date().toISOString(),
   };
 }

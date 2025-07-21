@@ -1,2 +1,12 @@
 node_modules
 .serverless
+dist
+.env.development
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/
+coverage/
+.cache/
+*.tsbuildinfo

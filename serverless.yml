@@ -5,8 +5,14 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
+  stage: ${opt:stage, 'local'}
+  logs:
+    restApi: true         # Habilita logs de API Gateway
+    httpApi: true         # Si estás usando HTTP API
   environment:
-    DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
+    NODE_ENV: ${env:NODE_ENV}
+    DYNAMODB_TABLE: ${env:DYNAMODB_TABLE, ''}
+    REDIS_URL: ${env:REDIS_URL, ''}
   iam:
     role:
       statements:
@@ -16,8 +22,15 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:Scan
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
           Resource:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/PlanetWeatherTable
+        - Effect: Allow
+          Action:
+            - elasticache:*
+          Resource: "*"
 
 plugins:
   - serverless-offline
@@ -34,7 +47,9 @@ build:
 functions:
   merged:
     handler: src/presentation/lambdas/mergedHandler.main
-    timeout: 15
+    memorySize: 256         # Ajustado para uso eficiente (puede ser 128 si las funciones son livianas)
+    timeout: 5              # Tiempo de espera en segundos (ajustado a lo necesario)
+    name: get-fusionados-fn
     events:
       - http:
           path: fusionados
@@ -42,7 +57,9 @@ functions:
           cors: true
   store:
     handler: src/presentation/lambdas/storeAggregatedHandler.main
-    timeout: 15
+    memorySize: 256
+    timeout: 5
+    name: store-aggregated-fn
     events:
       - http:
           path: almacenar
@@ -50,7 +67,9 @@ functions:
           cors: true
   history:
     handler: src/presentation/lambdas/getHistoryHandler.main
-    timeout: 15
+    memorySize: 256
+    timeout: 5
+    name: get-history-fn
     events:
       - http:
           path: historial

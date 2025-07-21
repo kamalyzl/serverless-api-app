@@ -6,7 +6,6 @@ import { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { dynamoDb } from '../database/dynamo/dynamoClient';
 import { PlanetWeatherRecord } from '../../domain/models/PlanetWeatherRecord';
 import { IPlanetWeatherRepository } from '../../domain/repositories/IPlanetWeatherRepository';
-import { unmarshallPlanetWeather } from '../mappers/planetWeatherMapper';
 import logger from '../logger/logger';
 import { sortByCreatedAtDesc } from '../../shared/utils/sortByCreatedAt';
 

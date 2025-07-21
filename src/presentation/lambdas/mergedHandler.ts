@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import { PlanetWeatherAggregator } from "../../application/useCases/PlanetWeatherAggregator";
 import 'dotenv/config';
 import { logErrorIfNotTest } from '../../infrastructure/logger/logErrorIfNotTest';
+import logger from '../../infrastructure/logger/logger';
 
 const planetWeatherAggregator = new PlanetWeatherAggregator();
 
@@ -17,7 +18,13 @@ export const main: APIGatewayProxyHandler = async (event) => {
             };
         }
 
+        const start = Date.now();
+
         const result = await planetWeatherAggregator.getAggregatedPlanetWeather(characterId);
+
+        const duration = Date.now() - start;
+
+        logger.info(`Function duration: ${duration}ms`); // Para revisar si puedes bajar el timeout
 
         return {
             statusCode: 200,

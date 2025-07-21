@@ -6,13 +6,11 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "serverless package",
-    "deploy": "serverless deploy",
-    "remove": "serverless remove",
-    "offline": "serverless offline",
-    "logs": "serverless logs -f hello -s dev",
-    "invoke": "serverless invoke -f hello",
-    "info": "serverless info"
+    "build": "sls package",
+    "deploy": "sls deploy --stage development",
+    "remove": "sls remove",
+    "offline": "sls offline --stage local",
+    "info": "sls info"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +35,10 @@
     "@aws-sdk/util-dynamodb": "^3.848.0",
     "axios": "^1.10.0",
     "dotenv": "^17.2.0",
+    "ioredis": "^5.6.1",
     "pino": "^9.7.0",
-    "uuid": "^11.1.0"
+    "redis": "^4.6.13",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.5"
   }
 }
